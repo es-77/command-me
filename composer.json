@@ -1,0 +1,17 @@
+{
+    "name": "emmanuel_saleem/command_me",
+    "description": "Create a migration with columns, and use these columns to generate a seeder, factory, controller, resource, and route",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "EmmanuelSaleem\\CommandMe\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "aleem"
+        }
+    ],
+    "require": {}
+}
