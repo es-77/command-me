@@ -222,29 +222,67 @@ class GenerateClasses extends Command
         }
     }
 
-    protected function generateModel($entityName, $columns = [])
-    {
-        $modelName = $this->askEntityOrCustomName('Model', $entityName);
-        $modelPath = app_path("Models/{$modelName}.php");
+    protected function generateModel($name)
+{
+    $entityName = $this->convertToPascalCase($this->entityName);
+    $stub_use = __DIR__ . '/stubs/model.stub';
+    $stub = file_get_contents($stub_use);
 
-        if (!file_exists($modelPath)) {
-            if ($this->confirm("Model $modelName does not exist. Would you like to create it?", true)) {
-                Artisan::call('make:model', ['name' => $modelName]);
-                $this->info("Model $modelName created successfully.");
-            } else {
-                $this->error("Model $modelName does not exist and was not created.");
-                return;
-            }
-        }
+    $fields = [];
+    foreach ($this->columnsName as $column) {
+        $fields[] = "'{$column['name']}',";
+    }
 
-        if (!empty($columns) && $this->confirm('Would you like to add fillable properties to the model?', true)) {
-            $fillableFields = array_map(function ($column) {
-                return $column['name'];
-            }, $columns);
-
-            $this->addFillableToModel($modelPath, $fillableFields);
+    $dateFields = [];
+    foreach ($this->columnsName as $column) {
+        if (in_array($column['type'], ['date', 'dateTime', 'timestamp', 'timestamps'])) {
+            $dateFields[] = "'{$column['name']}',";
         }
     }
+
+    $stub = str_replace(
+        ['{{ class }}', '{{FIELDS}}', '{{DATE_FIELDS}}'],
+        [
+            $entityName,
+            implode("\n        ", $fields),
+            implode("\n        ", $dateFields)
+        ],
+        $stub
+    );
+
+    $path = app_path("Models/{$name}.php");
+
+    if (!file_exists($path)) {
+        file_put_contents($path, $stub);
+        $this->info("Model created successfully at {$path}");
+    } else {
+        $this->error("Model already exists at {$path}");
+    }
+    return 0;
+}
+    // protected function generateModel($entityName, $columns = [])
+    // {
+    //     $modelName = $this->askEntityOrCustomName('Model', $entityName);
+    //     $modelPath = app_path("Models/{$modelName}.php");
+
+    //     if (!file_exists($modelPath)) {
+    //         if ($this->confirm("Model $modelName does not exist. Would you like to create it?", true)) {
+    //             Artisan::call('make:model', ['name' => $modelName]);
+    //             $this->info("Model $modelName created successfully.");
+    //         } else {
+    //             $this->error("Model $modelName does not exist and was not created.");
+    //             return;
+    //         }
+    //     }
+
+    //     if (!empty($columns) && $this->confirm('Would you like to add fillable properties to the model?', true)) {
+    //         $fillableFields = array_map(function ($column) {
+    //             return $column['name'];
+    //         }, $columns);
+
+    //         $this->addFillableToModel($modelPath, $fillableFields);
+    //     }
+    // }
 
     protected function addFillableToModel($modelPath, $fillableFields)
     {
@@ -270,21 +308,51 @@ class GenerateClasses extends Command
         }
     }
 
-    protected function generateResource($entityName)
-    {
-        $name = $this->askEntityOrCustomName('Resource', $entityName);
-        $resourcePath = app_path('Http/Resources/' . $name . 'Resource.php');
-        if (!file_exists($resourcePath)) {
-            Artisan::call('make:resource', ['name' => $name . 'Resource']);
-            $this->info("Resource $name created successfully.");
-        } else {
-            $this->info("Resource $name already exists.");
-        }
-        if ($this->confirm('Would you like to populate the resource with data?', true)) {
-            $this->populateResource($resourcePath, $entityName);
-        }
+    // protected function generateResource($entityName)
+    // {
+    //     $name = $this->askEntityOrCustomName('Resource', $entityName);
+    //     $resourcePath = app_path('Http/Resources/' . $name . 'Resource.php');
+    //     if (!file_exists($resourcePath)) {
+    //         Artisan::call('make:resource', ['name' => $name . 'Resource']);
+    //         $this->info("Resource $name created successfully.");
+    //     } else {
+    //         $this->info("Resource $name already exists.");
+    //     }
+    //     if ($this->confirm('Would you like to populate the resource with data?', true)) {
+    //         $this->populateResource($resourcePath, $entityName);
+    //     }
+    // }
+
+    protected function generateResource($name)
+{
+    $entityName = $this->convertToPascalCase($this->entityName);
+    $stub_use = __DIR__ . '/stubs/resource.stub';
+    $stub = file_get_contents($stub_use);
+
+    $fields = [];
+    foreach ($this->columnsName as $column) {
+        $fields[] = "'{$column['name']}' => \$this->{$column['name']},";
     }
 
+    $stub = str_replace(
+        ['{{ class }}', '{{FIELDS}}'],
+        [
+            $entityName,
+            implode("\n            ", $fields)
+        ],
+        $stub
+    );
+
+    $path = app_path("Http/Resources/{$name}Resource.php");
+
+    if (!file_exists($path)) {
+        file_put_contents($path, $stub);
+        $this->info("Resource created successfully at {$path}");
+    } else {
+        $this->error("Resource already exists at {$path}");
+    }
+    return 0;
+}
     protected function populateResource($resourcePath, $entityName)
     {
         // Fetch the list of columns (assuming you have a method to fetch column names and types)

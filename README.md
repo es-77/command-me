@@ -200,6 +200,6 @@ Routes added to `routes/web.php`.
 You can install the package via Composer:
 
 ```bash
-composer require emmanuel_saleem/command_me:dev-maste
+composer require emmanuel_saleem/command_me
 
 php artisan run:command-me
