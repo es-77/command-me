@@ -14,8 +14,7 @@
         }
     ],
     "minimum-stability": "dev",
-"prefer-stable": true,
-
+    "prefer-stable": true,
     "require": {},
     "extra": {
         "laravel": {
@@ -23,5 +22,10 @@
                 "EmmanuelSaleem\\CommandMe\\CommandMeServiceProvider"
             ]
         }
+    },
+    "homepage": "https://github.com/es-77/command-me",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/es-77/command-me"
     }
 }
