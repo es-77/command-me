@@ -10,8 +10,15 @@
     },
     "authors": [
         {
-            "name": "aleem"
+            "name": "Emmanuel Saleem"
         }
     ],
-    "require": {}
+    "require": {},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EmmanuelSaleem\\CommandMe\\CommandMeServiceProvider"
+            ]
+        }
+    }
 }
