@@ -475,7 +475,6 @@ class GenerateClasses extends Command
     {
         $name = $this->askEntityOrCustomName('Seeder', $entityName);
         $seederPath = database_path('seeders/' . $name . 'Seeder.php');
-
         if (!file_exists($seederPath)) {
             Artisan::call('make:seeder', ['name' => $name . 'Seeder']);
             $this->info("Seeder $name created successfully.");
