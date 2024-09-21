@@ -19,13 +19,13 @@ class GenerateClasses extends Command
         $entityName = $this->ask('What is the entity name?');
         $this->entityName = $entityName;
         $options = [
-            'Controller' => 0,
-            'Model' => 1,
-            'Request' => 2,
-            'Resource' => 3,
+            // 'Controller' => 0,
+            // 'Model' => 1,
+            // 'Request' => 2,
+            // 'Resource' => 3,
             'Migration' => 4,
-            'Seeder' => 5,
-            'Factory' => 6,
+            // 'Seeder' => 5,
+            // 'Factory' => 6,
         ];
         $choices = $this->choice(
             'What would you like to generate? [Controller, Model, Request, Resource, Migration, Seeder, Factory]', 
