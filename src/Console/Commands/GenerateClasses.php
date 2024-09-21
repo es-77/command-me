@@ -385,108 +385,108 @@ class GenerateClasses extends Command
     }
 
 
-    protected function generateSeeder($name)
-{
-    $entityName = $this->convertToPascalCase($this->entityName);
-    $stub_use = __DIR__ . '/stubs/seeder.stub';
-    $stub = file_get_contents($stub_use);
+//     protected function generateSeeder($name)
+// {
+//     $entityName = $this->convertToPascalCase($this->entityName);
+//     $stub_use = __DIR__ . '/stubs/seeder.stub';
+//     $stub = file_get_contents($stub_use);
 
-    $fields = [];
-    foreach ($this->columnsName as $column) {
-        switch ($column['type']) {
-            case 'bigIncrements':
-            case 'bigInteger':
-            case 'integer':
-            case 'mediumInteger':
-            case 'smallInteger':
-            case 'tinyInteger':
-                $fields[] = "'{$column['name']}' => 1,";
-                break;
-            case 'float':
-            case 'double':
-            case 'decimal':
-                $fields[] = "'{$column['name']}' => 10.99,";
-                break;
-            case 'boolean':
-                $fields[] = "'{$column['name']}' => true,";
-                break;
-            case 'date':
-                $fields[] = "'{$column['name']}' => now(),";
-                break;
-            case 'dateTime':
-            case 'timestamp':
-            case 'timestamps':
-                $fields[] = "'{$column['name']}' => now(),";
-                break;
-            case 'time':
-                $fields[] = "'{$column['name']}' => '12:00:00',";
-                break;
-            case 'string':
-                $fields[] = "'{$column['name']}' => 'default value',";
-                break;
-            case 'text':
-            case 'longText':
-            case 'mediumText':
-                $fields[] = "'{$column['name']}' => 'default text',";
-                break;
-            case 'char':
-                $fields[] = "'{$column['name']}' => 'default',";
-                break;
-            case 'binary':
-                $fields[] = "'{$column['name']}' => '',";
-                break;
-            case 'enum':
-                $enumValues = $this->getEnumValues($column['name']);
-                $fields[] = "'{$column['name']}' => {$enumValues}[0],";
-                break;
-            case 'password':
-                $fields[] = "'{$column['name']}' => Hash::make('password'),";
-                break;
-            case 'rememberToken':
-                $fields[] = "'{$column['name']}' => Str::random(10),";
-                break;
-            default:
-                $fields[] = "'{$column['name']}' => null,";
-                break;
+//     $fields = [];
+//     foreach ($this->columnsName as $column) {
+//         switch ($column['type']) {
+//             case 'bigIncrements':
+//             case 'bigInteger':
+//             case 'integer':
+//             case 'mediumInteger':
+//             case 'smallInteger':
+//             case 'tinyInteger':
+//                 $fields[] = "'{$column['name']}' => 1,";
+//                 break;
+//             case 'float':
+//             case 'double':
+//             case 'decimal':
+//                 $fields[] = "'{$column['name']}' => 10.99,";
+//                 break;
+//             case 'boolean':
+//                 $fields[] = "'{$column['name']}' => true,";
+//                 break;
+//             case 'date':
+//                 $fields[] = "'{$column['name']}' => now(),";
+//                 break;
+//             case 'dateTime':
+//             case 'timestamp':
+//             case 'timestamps':
+//                 $fields[] = "'{$column['name']}' => now(),";
+//                 break;
+//             case 'time':
+//                 $fields[] = "'{$column['name']}' => '12:00:00',";
+//                 break;
+//             case 'string':
+//                 $fields[] = "'{$column['name']}' => 'default value',";
+//                 break;
+//             case 'text':
+//             case 'longText':
+//             case 'mediumText':
+//                 $fields[] = "'{$column['name']}' => 'default text',";
+//                 break;
+//             case 'char':
+//                 $fields[] = "'{$column['name']}' => 'default',";
+//                 break;
+//             case 'binary':
+//                 $fields[] = "'{$column['name']}' => '',";
+//                 break;
+//             case 'enum':
+//                 $enumValues = $this->getEnumValues($column['name']);
+//                 $fields[] = "'{$column['name']}' => {$enumValues}[0],";
+//                 break;
+//             case 'password':
+//                 $fields[] = "'{$column['name']}' => Hash::make('password'),";
+//                 break;
+//             case 'rememberToken':
+//                 $fields[] = "'{$column['name']}' => Str::random(10),";
+//                 break;
+//             default:
+//                 $fields[] = "'{$column['name']}' => null,";
+//                 break;
+//         }
+//     }
+
+//     $stub = str_replace(
+//         ['{{ class }}', '{{FIELDS}}'],
+//         [
+//             $entityName,
+//             implode("\n            ", $fields)
+//         ],
+//         $stub
+//     );
+
+//     $path = database_path("seeders/{$name}Seeder.php");
+
+//     if (!file_exists($path)) {
+//         file_put_contents($path, $stub);
+//         $this->info("Seeder created successfully at {$path}");
+//     } else {
+//         $this->error("Seeder already exists at {$path}");
+//     }
+//     return 0;
+// }
+
+    protected function generateSeeder($entityName)
+    {
+        $name = $this->askEntityOrCustomName('Seeder', $entityName);
+        $seederPath = database_path('seeders/' . $name . 'Seeder.php');
+
+        if (!file_exists($seederPath)) {
+            Artisan::call('make:seeder', ['name' => $name . 'Seeder']);
+            $this->info("Seeder $name created successfully.");
+        } else {
+            $this->info("Seeder $name already exists.");
+        }
+
+        if ($this->confirm('Would you like to populate the seeder with data?', true)) {
+            $this->populateSeeder($seederPath, $entityName);
         }
     }
-
-    $stub = str_replace(
-        ['{{ class }}', '{{FIELDS}}'],
-        [
-            $entityName,
-            implode("\n            ", $fields)
-        ],
-        $stub
-    );
-
-    $path = database_path("seeders/{$name}Seeder.php");
-
-    if (!file_exists($path)) {
-        file_put_contents($path, $stub);
-        $this->info("Seeder created successfully at {$path}");
-    } else {
-        $this->error("Seeder already exists at {$path}");
-    }
-    return 0;
-}
-
-    // protected function generateSeeder($entityName)
-    // {
-    //     $name = $this->askEntityOrCustomName('Seeder', $entityName);
-    //     $seederPath = database_path('seeders/' . $name . 'Seeder.php');
-
-    //     if (!file_exists($seederPath)) {
-    //         Artisan::call('make:seeder', ['name' => $name . 'Seeder']);
-    //         $this->info("Seeder $name created successfully.");
-    //     } else {
-    //         $this->info("Seeder $name already exists.");
-    //     }
-
-    //     if ($this->confirm('Would you like to populate the seeder with data?', true)) {
-    //         $this->populateSeeder($seederPath, $entityName);
-    //     }
-    // }
 
 
     protected function populateSeeder($seederPath, $entityName)
