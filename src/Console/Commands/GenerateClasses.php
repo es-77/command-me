@@ -395,23 +395,123 @@ class GenerateClasses extends Command
         $this->info("Seeder for $entityName populated successfully.");
     }
 
+    protected function generateFactory($name)
+{
+    $entityName = $this->convertToPascalCase($this->entityName);
+    $stub_use = __DIR__ . '/stubs/factory.stub';
+    $stub = file_get_contents($stub_use);
 
-    protected function generateFactory($entityName)
-    {
-        $name = $this->askEntityOrCustomName('Factory', $entityName);
-        $factoryPath = database_path('factories/' . $name . 'Factory.php');
-
-        if (!file_exists($factoryPath)) {
-            Artisan::call('make:factory', ['name' => $name . 'Factory']);
-            $this->info("Factory $name created successfully.");
-        } else {
-            $this->info("Factory $name already exists.");
-        }
-
-        if ($this->confirm('Would you like to populate the factory with columns?', true)) {
-            $this->populateFactory($factoryPath, $entityName);
+    $fields = [];
+    foreach ($this->columnsName as $column) {
+        switch ($column['type']) {
+            case 'bigIncrements':
+            case 'increments':
+            case 'bigInteger':
+            case 'integer':
+            case 'mediumInteger':
+            case 'smallInteger':
+            case 'tinyInteger':
+                $fields[] = "'{$column['name']}' => fake()->numberBetween(1, 100),";
+                break;
+            case 'float':
+            case 'double':
+            case 'decimal':
+                $fields[] = "'{$column['name']}' => fake()->randomFloat(2, 1, 100),";
+                break;
+            case 'boolean':
+                $fields[] = "'{$column['name']}' => fake()->boolean(),";
+                break;
+            case 'date':
+                $fields[] = "'{$column['name']}' => now(),";
+                break;
+            case 'dateTime':
+            case 'timestamp':
+            case 'timestamps':
+                $fields[] = "'{$column['name']}' => now(),";
+                break;
+            case 'time':
+                $fields[] = "'{$column['name']}' => fake()->time(),";
+                break;
+            case 'string':
+                $fields[] = "'{$column['name']}' => fake()->sentence(),";
+                break;
+            case 'text':
+            case 'longText':
+            case 'mediumText':
+                $fields[] = "'{$column['name']}' => fake()->paragraph(),";
+                break;
+            case 'char':
+                $fields[] = "'{$column['name']}' => fake()->word(),";
+                break;
+            case 'binary':
+                $fields[] = "'{$column['name']}' => fake()->binary(10),";
+                break;
+            case 'enum':
+                // Assuming enum values are stored in a separate array
+                $enumValues = $this->getEnumValues($column['name']);
+                $fields[] = "'{$column['name']}' => \$this->faker->randomElement(" . json_encode($enumValues) . "),";
+                break;
+            case 'rememberToken':
+                $fields[] = "'{$column['name']}' => Str::random(10),";
+                break;
+            case 'morphs':
+                // Morphs require manual handling
+                $fields[] = "'{$column['name']}' => '', // Manual handling required";
+                break;
+            case 'nullableTimestamps':
+            case 'softDeletes':
+                // These are timestamp columns, but not fillable
+                break;
+            default:
+                $fields[] = "'{$column['name']}' => '',";
+                break;
         }
     }
+
+    $stub = str_replace(
+        ['{{ class }}', '{{FIELDS}}'],
+        [
+            $entityName,
+            implode("\n            ", $fields)
+        ],
+        $stub
+    );
+
+    $path = database_path("factories/{$name}Factory.php");
+
+    if (!file_exists($path)) {
+        file_put_contents($path, $stub);
+        $this->info("Factory created successfully at {$path}");
+    } else {
+        $this->error("Factory already exists at {$path}");
+    }
+    return 0;
+}
+
+// Helper function to get enum values
+protected function getEnumValues($columnName)
+{
+    // Logic to retrieve enum values from database or config
+    // For demonstration purposes, return static values
+    return ['value1', 'value2', 'value3'];
+}
+
+    // protected function generateFactory($entityName)
+    // {
+    //     $name = $this->askEntityOrCustomName('Factory', $entityName);
+    //     $factoryPath = database_path('factories/' . $name . 'Factory.php');
+
+    //     if (!file_exists($factoryPath)) {
+    //         Artisan::call('make:factory', ['name' => $name . 'Factory']);
+    //         $this->info("Factory $name created successfully.");
+    //     } else {
+    //         $this->info("Factory $name already exists.");
+    //     }
+
+    //     if ($this->confirm('Would you like to populate the factory with columns?', true)) {
+    //         $this->populateFactory($factoryPath, $entityName);
+    //     }
+    // }
 
     protected function populateFactory($factoryPath, $entityName)
     {
